@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Cobrinha</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            border: 1px solid #fff;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const gridSize = 20; // Tamanho de cada quadrado
+    const canvasSize = 400; // Tamanho da tela
+    let snake = [{x: 8 * gridSize, y: 8 * gridSize}]; // Cobrinha inicia no centro
+    let direction = 'RIGHT';
+    let food = generateFood();
+    let score = 0;
+
+    // Função principal de atualização do jogo
+    function updateGame() {
+        const head = {x: snake[0].x, y: snake[0].y};
+
+        if (direction === 'LEFT') head.x -= gridSize;
+        if (direction === 'RIGHT') head.x += gridSize;
+        if (direction === 'UP') head.y -= gridSize;
+        if (direction === 'DOWN') head.y += gridSize;
+
+        // Verifica colisão com as bordas
+        if (head.x < 0 || head.x >= canvasSize || head.y < 0 || head.y >= canvasSize || collisionWithSnake(head)) {
+            resetGame();
+            return;
+        }
+
+        // Adiciona a nova cabeça
+        snake.unshift(head);
+
+        // Verifica se a cobrinha comeu a comida
+        if (head.x === food.x && head.y === food.y) {
+            score++;
+            food = generateFood();
+        } else {
+            snake.pop(); // Remove a cauda se não comer a comida
+        }
+
+        drawGame();
+    }
+
+    // Função para desenhar o jogo
+    function drawGame() {
+        ctx.clearRect(0, 0, canvasSize, canvasSize); // Limpa o canvas
+
+        // Desenha a cobrinha
+        snake.forEach(segment => {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+        });
+
+        // Desenha a comida
+        ctx.fillStyle = 'red';
+        ctx.fillRect(food.x, food.y, gridSize, gridSize);
+
+        // Desenha a pontuação
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.fillText(`Pontuação: ${score}`, 10, 20);
+    }
+
+    // Função para gerar comida aleatória
+    function generateFood() {
+        const x = Math.floor(Math.random() * (canvasSize / gridSize)) * gridSize;
+        const y = Math.floor(Math.random() * (canvasSize / gridSize)) * gridSize;
+        return {x, y};
+    }
+
+    // Função para verificar se a cobrinha colidiu consigo mesma
+    function collisionWithSnake(head) {
+        return snake.some((segment, index) => index !== 0 && segment.x === head.x && segment.y === head.y);
+    }
+
+    // Função para reiniciar o jogo
+    function resetGame() {
+        alert('Game Over! Sua pontuação foi: ' + score);
+        snake = [{x: 8 * gridSize, y: 8 * gridSize}];
+        direction = 'RIGHT';
+        score = 0;
+        food = generateFood();
+    }
+
+    // Função para capturar as teclas pressionadas
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft' && direction !== 'RIGHT') {
+            direction = 'LEFT';
+        } else if (event.key === 'ArrowRight' && direction !== 'LEFT') {
+            direction = 'RIGHT';
+        } else if (event.key === 'ArrowUp' && direction !== 'DOWN') {
+            direction = 'UP';
+        } else if (event.key === 'ArrowDown' && direction !== 'UP') {
+            direction = 'DOWN';
+        }
+    });
+
+    // Inicia o loop do jogo
+    function gameLoop() {
+        updateGame();
+        setTimeout(gameLoop, 100); // Atualiza o jogo a cada 100ms
+    }
+
+    gameLoop();
+</script>
+
+</body>
+</html>
